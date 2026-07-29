@@ -34,8 +34,7 @@ class RenderTests(unittest.TestCase):
         )
         self.assertEqual(
             html,
-            "<div><b>中国</b> <span>〔中國〕</span></div>"
-            "<div><i>Zhōng guó</i></div>"
+            "<div><b>中国</b> <span>〔中國〕</span> <i>Zhōng guó</i></div>"
             "<div>1. China &amp; &lt;Middle&gt;</div>",
         )
 
@@ -54,4 +53,3 @@ class RenderTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

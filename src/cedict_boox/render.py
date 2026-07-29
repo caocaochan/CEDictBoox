@@ -52,11 +52,9 @@ def render_article(key: str, entries: Iterable[CedictEntry]) -> str:
         heading = f"<div><b>{escape(key)}</b>"
         if alternate != key:
             heading += f" <span>〔{escape(alternate)}〕</span>"
-        heading += "</div>"
-        parts = [
-            heading,
-            f"<div><i>{escape(numeric_to_tone_marks(entry.numeric_pinyin))}</i></div>",
-        ]
+        pinyin = escape(numeric_to_tone_marks(entry.numeric_pinyin))
+        heading += f" <i>{pinyin}</i></div>"
+        parts = [heading]
         parts.extend(
             f"<div>{number}. {escape(sense)}</div>"
             for number, sense in enumerate(entry.senses, 1)
