@@ -1,4 +1,4 @@
-"""End-to-end deterministic build and installation ZIP packaging."""
+"""End-to-end deterministic StarDict ZIP and standalone MDX packaging."""
 
 from __future__ import annotations
 
@@ -13,10 +13,11 @@ import tempfile
 from typing import Any
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
+from .mdict import write_mdict
 from .render import aggregate_entries, render_article
 from .source import load_tracked_source
 from .stardict import PACKAGE_DIR_NAME, write_stardict
-from .verify import verify_directory, verify_zip
+from .verify import verify_directory, verify_mdx, verify_zip
 
 
 class BuildError(ValueError):
@@ -40,6 +41,10 @@ class BuildResult:
     dict_size: int
     zip_size: int
     converter_commit: str
+    mdx: Path
+    mdx_checksum: Path
+    mdx_sha256: str
+    mdx_size: int
 
 
 def build_package(
@@ -62,6 +67,8 @@ def build_package(
     suffix = "" if revision == 1 else f"-r{revision}"
     archive_name = f"cc-cedict-boox-{release_date}{suffix}.zip"
     checksum_name = f"{archive_name}.sha256"
+    mdx_name = f"cc-cedict-boox-{release_date}{suffix}.mdx"
+    mdx_checksum_name = f"{mdx_name}.sha256"
 
     output_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
@@ -107,15 +114,31 @@ def build_package(
             f"{zip_hash}  {archive_name}\n", encoding="ascii", newline="\n"
         )
 
+        staged_mdx = staging / mdx_name
+        mdx_stats = write_mdict(
+            staged_mdx, articles, source_date=source.release_date
+        )
+        verified_mdx = verify_mdx(staged_mdx)
+        if verified_mdx.wordcount != len(grouped):
+            raise BuildError("MDX verification returned an unexpected word count")
+        mdx_hash = hashlib.sha256(staged_mdx.read_bytes()).hexdigest()
+        staged_mdx_checksum = staging / mdx_checksum_name
+        staged_mdx_checksum.write_text(
+            f"{mdx_hash}  {mdx_name}\n", encoding="ascii", newline="\n"
+        )
+
         simplified_keys = {entry.simplified for entry in entries}
         traditional_keys = {entry.traditional for entry in entries}
         result = BuildResult(
             archive=output_dir / archive_name,
             checksum=output_dir / checksum_name,
             report=output_dir / "build-report.json",
+            mdx=output_dir / mdx_name,
+            mdx_checksum=output_dir / mdx_checksum_name,
             release_date=release_date,
             revision=revision,
             archive_sha256=zip_hash,
+            mdx_sha256=mdx_hash,
             parsed_entries=len(entries),
             unique_simplified_keys=len(simplified_keys),
             unique_traditional_keys=len(traditional_keys),
@@ -126,6 +149,7 @@ def build_package(
             idx_size=stats.idx_size,
             dict_size=stats.dict_size,
             zip_size=staged_zip.stat().st_size,
+            mdx_size=mdx_stats.mdx_size,
             converter_commit=commit,
         )
         staged_report = staging / "build-report.json"
@@ -133,12 +157,16 @@ def build_package(
         report_value["archive"] = archive_name
         report_value["checksum"] = checksum_name
         report_value["report"] = "build-report.json"
+        report_value["mdx"] = mdx_name
+        report_value["mdx_checksum"] = mdx_checksum_name
         report_value["source_archive_sha256"] = source.archive_sha256
         report_value["source_text_sha256"] = source.text_sha256
         staged_report.write_bytes(_json_bytes(report_value))
 
         os.replace(staged_zip, result.archive)
         os.replace(staged_checksum, result.checksum)
+        os.replace(staged_mdx, result.mdx)
+        os.replace(staged_mdx_checksum, result.mdx_checksum)
         os.replace(staged_report, result.report)
     return result
 
@@ -215,4 +243,3 @@ def _json_bytes(value: dict[str, Any]) -> bytes:
         json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True, default=str)
         + "\n"
     ).encode("utf-8")
-

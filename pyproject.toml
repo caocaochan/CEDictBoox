@@ -12,6 +12,9 @@ license = { text = "MIT" }
 authors = [{ name = "CEDictBoox contributors" }]
 dependencies = []
 
+[project.optional-dependencies]
+test = ["mdict-utils==1.3.14"]
+
 [project.scripts]
 cedict-boox = "cedict_boox.cli:main"
 
@@ -20,4 +23,3 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

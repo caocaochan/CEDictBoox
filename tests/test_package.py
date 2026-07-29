@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -33,8 +34,11 @@ class PackageTests(unittest.TestCase):
                 hashlib.sha256(first.archive.read_bytes()).digest(),
                 hashlib.sha256(second.archive.read_bytes()).digest(),
             )
+            self.assertEqual(first.mdx.read_bytes(), second.mdx.read_bytes())
             verified = verify_package(first.archive)
             self.assertEqual(verified.wordcount, first.unique_lookup_keys)
+            verified_mdx = verify_package(first.mdx)
+            self.assertEqual(verified_mdx.wordcount, first.unique_lookup_keys)
             with ZipFile(first.archive) as archive:
                 names = archive.namelist()
                 self.assertTrue(
@@ -46,6 +50,20 @@ class PackageTests(unittest.TestCase):
                 checksum,
                 f"{first.archive_sha256}  {first.archive.name}\n",
             )
+            mdx_checksum = first.mdx_checksum.read_text(encoding="ascii")
+            self.assertEqual(
+                mdx_checksum,
+                f"{first.mdx_sha256}  {first.mdx.name}\n",
+            )
+            self.assertEqual(
+                first.mdx_sha256,
+                hashlib.sha256(first.mdx.read_bytes()).hexdigest(),
+            )
+            report = json.loads(first.report.read_text(encoding="utf-8"))
+            self.assertEqual(report["mdx"], first.mdx.name)
+            self.assertEqual(report["mdx_checksum"], first.mdx_checksum.name)
+            self.assertEqual(report["mdx_sha256"], first.mdx_sha256)
+            self.assertEqual(report["mdx_size"], first.mdx.stat().st_size)
 
     def test_rebuild_revision_changes_name(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -60,6 +78,7 @@ class PackageTests(unittest.TestCase):
                 converter_commit="test",
             )
             self.assertEqual(result.archive.name, "cc-cedict-boox-2026-07-28-r2.zip")
+            self.assertEqual(result.mdx.name, "cc-cedict-boox-2026-07-28-r2.mdx")
 
     def test_verifier_rejects_non_package(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

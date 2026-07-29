@@ -1,7 +1,8 @@
 # CC-CEDICT for BOOX
 
-Reproducible, unified Simplified/Traditional Chinese-to-English StarDict builds
-for the built-in Dictionary and NeoReader on BOOX firmware 4.1 or newer.
+Reproducible, unified Simplified/Traditional Chinese-to-English StarDict and
+MDict 2.0 builds for the built-in Dictionary and NeoReader on BOOX firmware
+4.1 or newer.
 
 The generated dictionary uses real index entries for both Chinese forms. It
 does not depend on StarDict synonym files, and it does not index pinyin or
@@ -9,7 +10,7 @@ English. Articles show the selected headword first, the alternate Chinese form,
 tone-marked pinyin, and inline English senses separated by middle dots using
 conservative HTML.
 
-## Install a release on BOOX
+## Install a StarDict release on BOOX
 
 1. Download `cc-cedict-boox-YYYY-MM-DD.zip` from GitHub Releases.
 2. Extract the included `CC-CEDICT-Boox` directory beneath:
@@ -29,6 +30,24 @@ conservative HTML.
    **CC-CEDICT Chinese-English (Simplified + Traditional)**.
 6. Restart the Dictionary app or reboot the device if it is not detected.
 
+## Install an MDict release on BOOX
+
+Install either the StarDict package above or the MDict file, not both, to avoid
+duplicate dictionaries.
+
+1. Download `cc-cedict-boox-YYYY-MM-DD.mdx` from GitHub Releases.
+2. Create this directory on the device:
+
+   ```text
+   Internal shared storage/dicts/CC-CEDICT-Boox-MDict/
+   ```
+
+3. Copy the `.mdx` file into that directory.
+4. Open the BOOX Dictionary app.
+5. Open its options, choose **Preferred Dictionary**, and enable
+   **CC-CEDICT Chinese-English (Simplified + Traditional)**.
+6. Restart the Dictionary app or reboot the device if it is not detected.
+
 ## Set up the builder
 
 Requirements:
@@ -40,11 +59,13 @@ Requirements:
 From the repository root:
 
 ```powershell
-python -m pip install -e .
+python -m pip install -e ".[test]"
 python -m unittest discover -s tests -v
 ```
 
 The `cedict-boox` console command and `python -m cedict_boox` are equivalent.
+The `test` extra installs a pinned independent MDX reader used only by the test
+suite; production builds remain standard-library-only.
 
 ## Ingest a verified source snapshot
 
@@ -81,6 +102,7 @@ There is deliberately no URL or download option in the program or workflows.
 ```powershell
 python -m cedict_boox build
 python -m cedict_boox verify dist\cc-cedict-boox-YYYY-MM-DD.zip
+python -m cedict_boox verify dist\cc-cedict-boox-YYYY-MM-DD.mdx
 ```
 
 Use a different destination or a rebuild revision when needed:
@@ -89,10 +111,10 @@ Use a different destination or a rebuild revision when needed:
 python -m cedict_boox build --output artifacts --revision 2
 ```
 
-The build writes the installation ZIP, a `.sha256` sidecar, and
-`build-report.json`. Given the same tracked source manifest, source archive,
-converter commit, and revision, output bytes are deterministic across
-platforms.
+The build writes the StarDict installation ZIP, the standalone MDict 2.0
+`.mdx`, one `.sha256` sidecar for each, and `build-report.json`. Given the same
+tracked source manifest, source archive, converter commit, and revision, output
+bytes are deterministic across platforms.
 
 ## What validation covers
 
@@ -107,10 +129,12 @@ entry-count mismatches. The output verifier independently checks:
 - contiguous, fully referenced dictionary data
 - the restricted HTML tag set
 - the exact installation-package layout
+- MDict 2.0 header, keyword blocks, record blocks, offsets, checksums, and
+  compressed payloads
 
-CI runs the tests on Windows and Linux. When a tracked source is present, CI
-also builds twice, compares SHA-256 values, verifies the result, and uploads it
-as an artifact.
+CI runs the tests on Windows and Linux, including an independent MDict reader.
+When a tracked source is present, CI also builds twice, compares both artifact
+SHA-256 values, verifies both formats, and uploads them as artifacts.
 
 Merging a changed tracked source into `main` publishes a stable GitHub Release.
 Manual release runs create `-r2`, `-r3`, and later converter rebuilds while

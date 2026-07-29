@@ -32,8 +32,14 @@ class CliTests(unittest.TestCase):
                     0,
                 )
             built = root / "dist" / "cc-cedict-boox-2026-07-28.zip"
+            built_mdx = root / "dist" / "cc-cedict-boox-2026-07-28.mdx"
+            self.assertTrue(built_mdx.is_file())
+            self.assertTrue(
+                (root / "dist" / "cc-cedict-boox-2026-07-28.mdx.sha256").is_file()
+            )
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(main(["verify", str(built)]), 0)
+                self.assertEqual(main(["verify", str(built_mdx)]), 0)
 
     def test_reports_missing_source(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -46,4 +52,3 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install project
-        run: python -m pip install -e .
+        run: python -m pip install -e ".[test]"
       - name: Run tests
         run: python -m unittest discover -s tests -v
       - name: Select release tag, build, and publish
@@ -66,12 +66,17 @@ jobs:
           python -m cedict_boox build --output dist --revision "$revision"
           archive="$(find dist -maxdepth 1 -name '*.zip' -print -quit)"
           checksum="${archive}.sha256"
+          mdx="$(find dist -maxdepth 1 -name '*.mdx' -print -quit)"
+          mdx_checksum="${mdx}.sha256"
+          test -n "$archive" && test -n "$mdx"
           python -m cedict_boox verify "$archive"
+          python -m cedict_boox verify "$mdx"
 
           parsed="$(python -c "import json; print(json.load(open('dist/build-report.json'))['parsed_entries'])")"
           keys="$(python -c "import json; print(json.load(open('dist/build-report.json'))['unique_lookup_keys'])")"
           cat > release-notes.md <<EOF
-          Automated BOOX StarDict build from the verified CC-CEDICT release dated ${release_date}.
+          Automated BOOX StarDict and MDict 2.0 builds from the verified
+          CC-CEDICT release dated ${release_date}.
 
           - Parsed CC-CEDICT entries: ${parsed}
           - Unified simplified/traditional lookup keys: ${keys}
@@ -80,13 +85,21 @@ jobs:
           - Data license: CC BY-SA 4.0
           - Physical BOOX 4.1 validation pending
 
-          Install by extracting the included \`CC-CEDICT-Boox\` folder under
-          \`Internal shared storage/dicts/\`, then select it in Preferred Dictionary.
+          Install either format, not both:
+
+          - StarDict: extract the included \`CC-CEDICT-Boox\` folder under
+            \`Internal shared storage/dicts/\`.
+          - MDict: copy the \`.mdx\` file into its own folder under
+            \`Internal shared storage/dicts/\`.
+
+          Then select the dictionary in Preferred Dictionary.
           EOF
 
           gh release create "$tag" \
             "$archive" \
             "$checksum" \
+            "$mdx" \
+            "$mdx_checksum" \
             "dist/build-report.json" \
             "data/upstream/source.json" \
             --target "$GITHUB_SHA" \

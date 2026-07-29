@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import sys
 
+from .mdict import MDictError
 from .package import BuildError, build_package
 from .parser import CedictParseError
 from .pinyin import PinyinError
@@ -82,6 +83,7 @@ def main(argv: list[str] | None = None) -> int:
     except (
         BuildError,
         CedictParseError,
+        MDictError,
         PinyinError,
         SourceError,
         StarDictError,
@@ -95,4 +97,3 @@ def main(argv: list[str] | None = None) -> int:
 
 def _print_json(value: object) -> None:
     print(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True, default=str))
-
