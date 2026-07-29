@@ -54,10 +54,6 @@ def render_article(key: str, entries: Iterable[CedictEntry]) -> str:
             heading += f" <span>〔{escape(alternate)}〕</span>"
         pinyin = escape(numeric_to_tone_marks(entry.numeric_pinyin))
         heading += f" <i>{pinyin}</i></div>"
-        parts = [heading]
-        parts.extend(
-            f"<div>{number}. {escape(sense)}</div>"
-            for number, sense in enumerate(entry.senses, 1)
-        )
-        rendered_records.append("".join(parts))
+        definitions = " · ".join(escape(sense) for sense in entry.senses)
+        rendered_records.append(f"{heading}<div>{definitions}</div>")
     return "<hr>".join(rendered_records)

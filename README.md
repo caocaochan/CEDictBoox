@@ -6,7 +6,8 @@ for the built-in Dictionary and NeoReader on BOOX firmware 4.1 or newer.
 The generated dictionary uses real index entries for both Chinese forms. It
 does not depend on StarDict synonym files, and it does not index pinyin or
 English. Articles show the selected headword first, the alternate Chinese form,
-tone-marked pinyin, and numbered English senses using conservative HTML.
+tone-marked pinyin, and inline English senses separated by middle dots using
+conservative HTML.
 
 ## Install a release on BOOX
 
@@ -123,4 +124,3 @@ CC-CEDICT data and generated dictionary packages are under
 [CC BY-SA 4.0](LICENSE-CC-BY-SA-4.0.txt). Attribution belongs to the
 CC-CEDICT contributors; the verified distribution is provided by MDBG. The
 MIT license for this converter does not override the dictionary-data license.
-
