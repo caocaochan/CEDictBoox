@@ -1,0 +1,17 @@
+{
+  "archive_member": "cedict_ts.u8",
+  "archive_name": "cedict_1_0_ts_utf-8_mdbg.zip",
+  "archive_sha256": "413d17e0c3106da6f3d177465d6776038ecaf05224f237c77d77d9bbf0c74476",
+  "archive_url": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.zip",
+  "attribution": "CC-CEDICT contributors; distributed by MDBG",
+  "declared_entries": 124726,
+  "format_version": "1",
+  "ingested_at": "2026-07-29T11:00:07.776831Z",
+  "license": "CC-BY-SA-4.0",
+  "parsed_entries": 124726,
+  "release_date": "2026-07-29",
+  "release_timestamp": "2026-07-29T07:36:56Z",
+  "schema_version": 1,
+  "source_page": "https://www.mdbg.net/chinese/dictionary?page=cc-cedict",
+  "text_sha256": "82673da67bc8f78ddb5eba3b939beee9971764d38904f9213de5cfc51d1ca516"
+}
